@@ -9,7 +9,6 @@
     const actionToast = document.querySelector('#action-toast');
     const openOverlays = new Set();
     let returnFocus = null;
-    let lenis = null;
     let menuReturnFocus = null;
     let toastTimer = 0;
 
@@ -64,7 +63,6 @@
     const syncScrollLock = () => {
         const locked = openOverlays.size > 0 || !document.documentElement.classList.contains('page-ready');
         document.body.classList.toggle('is-locked', locked);
-        if (lenis) locked ? lenis.stop() : lenis.start();
     };
     syncScrollLock();
 
@@ -171,8 +169,7 @@
             if (!destination) return;
             event.preventDefault();
             closeMenu(false);
-            if (lenis && !reducedMotion) lenis.scrollTo(destination, { offset: -12 });
-            else destination.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
+            destination.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
             history.replaceState(null, '', link.getAttribute('href'));
         });
     });
@@ -194,17 +191,6 @@
         if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     });
-
-    /* Native smooth scrolling remains available if the optional Lenis import is offline. */
-    if (!reducedMotion) {
-        import('https://cdn.jsdelivr.net/npm/lenis@1.1.18/+esm')
-            .then(({ default: Lenis }) => {
-                lenis = new Lenis({ autoRaf: true, smoothWheel: true, syncTouch: false });
-                window.sunSonLenis = lenis;
-                if (!document.documentElement.classList.contains('page-ready') || openOverlays.size) lenis.stop();
-            })
-            .catch(() => { /* CSS native smooth scrolling is the fallback. */ });
-    }
 
     /* Word-by-word hero reveal, held behind the opening curtain. */
     const heroTitle = document.querySelector('[data-hero-reveal]');
@@ -343,7 +329,7 @@
         if (!heroArt || reducedMotion) return;
         const hero = heroArt.closest('.hero-card');
         const bounds = hero.getBoundingClientRect();
-        const progress = Math.min(1, Math.max(0, (window.innerHeight - bounds.top) / (window.innerHeight + bounds.height)));
+        const progress = Math.min(1, Math.max(0, -bounds.top / bounds.height));
         heroArt.style.transform = `translate3d(0, ${progress * 3.5}%, 0)`;
     };
     window.addEventListener('scroll', () => {
@@ -354,9 +340,24 @@
     const roleInput = document.querySelector('#account-role');
     const departmentField = document.querySelector('#department-field');
     const departmentInput = document.querySelector('#department');
+    const syncRequiredIndicator = (input) => {
+        const label = input.labels?.[0];
+        if (!label) return;
+        let indicator = label.querySelector('.required-indicator');
+        if (input.required && !indicator) {
+            indicator = document.createElement('span');
+            indicator.className = 'required-indicator';
+            indicator.textContent = 'Required';
+            label.append(indicator);
+        } else if (!input.required) {
+            indicator?.remove();
+        }
+    };
+    document.querySelectorAll('.field input, .field textarea').forEach(syncRequiredIndicator);
     document.querySelectorAll('[data-role-choice]').forEach((button) => {
         button.addEventListener('click', () => {
             const role = button.dataset.roleChoice;
+            document.querySelector('.role-error')?.remove();
             if (roleInput) roleInput.value = role;
             document.querySelectorAll('[data-role-choice]').forEach((option) => {
                 const selected = option === button;
@@ -367,6 +368,7 @@
                 const isEmployee = role === 'employee';
                 departmentField.hidden = !isEmployee;
                 departmentInput.required = isEmployee;
+                syncRequiredIndicator(departmentInput);
                 if (!isEmployee) departmentInput.value = '';
             }
         });
@@ -375,8 +377,89 @@
     const passwordInput = document.querySelector('#password');
     const confirmInput = document.querySelector('#confirmPassword');
     const checkPasswords = () => {
-        if (confirmInput) confirmInput.setCustomValidity(confirmInput.value && confirmInput.value !== passwordInput?.value ? 'Passwords do not match.' : '');
+        if (!confirmInput) return;
+        confirmInput.setCustomValidity(confirmInput.value && confirmInput.value !== passwordInput?.value ? 'Passwords do not match.' : '');
+        if (confirmInput.validity.valid) {
+            clearFieldError(confirmInput);
+            clearServerFieldError(confirmInput);
+        } else if (confirmInput.dataset.validationShown) {
+            showFieldError(confirmInput);
+        }
     };
+    const updateCustomConstraint = (input) => {
+        if (!(input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement)) return;
+        let message = '';
+        const value = input.value.trim();
+        const inputType = input instanceof HTMLTextAreaElement ? 'textarea' : input.type;
+        if (input.required && ['text', 'email', 'tel', 'textarea'].includes(inputType) && value === '') {
+            message = 'This field is required.';
+        } else if (input.id === 'phone' && value && !/^[0-9+()\s-]{7,20}$/.test(value)) {
+            message = 'Use 7–20 digits, spaces, parentheses, +, or -.';
+        } else if (input.id === 'username' && value && !/^[A-Za-z0-9_.-]{3,50}$/.test(value)) {
+            message = 'Use 3–50 letters, numbers, dots, dashes, or underscores.';
+        } else if (input.id === 'password' && input.value.length > 0 && input.value.length < 8) {
+            message = 'Use at least 8 characters.';
+        } else if (input.id === 'confirmPassword' && input.value && input.value !== passwordInput?.value) {
+            message = 'Passwords do not match.';
+        } else if (input.type === 'email' && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+            message = 'Enter a valid email address.';
+        }
+        input.setCustomValidity(message);
+    };
+    const clientErrorFor = (input) => {
+        const field = input.closest('.field');
+        if (!field) return null;
+        let error = field.querySelector('[data-client-error]');
+        if (!error) {
+            error = document.createElement('small');
+            error.className = 'field-error';
+            error.dataset.clientError = '';
+            error.id = `client-error-${input.id}`;
+            field.append(error);
+        }
+        return error;
+    };
+    const showFieldError = (input) => {
+        const error = clientErrorFor(input);
+        if (!error) return;
+        error.textContent = input.validationMessage || 'Check this field and try again.';
+        input.dataset.validationShown = 'true';
+        input.setAttribute('aria-invalid', 'true');
+        input.setAttribute('aria-describedby', error.id);
+    };
+    const clearFieldError = (input) => {
+        input.closest('.field')?.querySelector('[data-client-error]')?.remove();
+        input.removeAttribute('aria-invalid');
+        input.removeAttribute('aria-describedby');
+        delete input.dataset.validationShown;
+    };
+    const clearServerFieldError = (input) => {
+        input.closest('.field')?.querySelector('.field-error:not([data-client-error])')?.remove();
+    };
+    document.addEventListener('invalid', (event) => {
+        const input = event.target;
+        if (!(input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement)) return;
+        updateCustomConstraint(input);
+        showFieldError(input);
+    }, true);
+    document.querySelectorAll('.field input, .field textarea').forEach((input) => {
+        input.addEventListener('input', () => {
+            updateCustomConstraint(input);
+            if (input.validity.valid) {
+                clearFieldError(input);
+                clearServerFieldError(input);
+            }
+            else if (input.dataset.validationShown) showFieldError(input);
+        });
+        input.addEventListener('change', () => {
+            updateCustomConstraint(input);
+            if (input.validity.valid) {
+                clearFieldError(input);
+                clearServerFieldError(input);
+            }
+            else if (input.dataset.validationShown) showFieldError(input);
+        });
+    });
     passwordInput?.addEventListener('input', checkPasswords);
     confirmInput?.addEventListener('input', checkPasswords);
 
@@ -387,9 +470,14 @@
             const submit = form.querySelector('button[type="submit"]');
             if (!submit) return;
             form.classList.add('is-submitting');
+            form.setAttribute('aria-busy', 'true');
             submit.disabled = true;
             if (form.classList.contains('modal-form') && form.closest('#contact-modal')) {
                 submit.firstChild.textContent = 'Sending message ';
+            } else if (form.id === 'register-form') {
+                submit.firstChild.textContent = 'Creating account ';
+            } else if (form.closest('#login-modal')) {
+                submit.firstChild.textContent = 'Logging in ';
             }
         });
     });

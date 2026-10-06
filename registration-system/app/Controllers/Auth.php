@@ -56,8 +56,8 @@ class Auth extends BaseController
         }
 
         return redirect()->to(site_url('/'))
-            ->with('registerNotice', 'Your account was created. You can log in now.')
-            ->with('actionNotice', 'Registration successful. Your account is ready. Please log in.')
+            ->with('registerNotice', 'Registration successful. Your account was saved to the database. You can log in now.')
+            ->with('actionNotice', 'Registration successful. Your account was saved to the database. Please log in.')
             ->with('actionNoticeType', 'success')
             ->with('openPanel', 'login');
     }
@@ -74,11 +74,15 @@ class Auth extends BaseController
         }
 
         try {
-            $user = (new AccountModel())->authenticate($username, $password);
+            $accounts = new AccountModel();
+            $user = $accounts->authenticate($username, $password);
+            if ($user !== null) {
+                $accounts->recordLogin($user);
+            }
         } catch (Throwable $exception) {
             log_message('error', 'Login failed: {message}', ['message' => $exception->getMessage()]);
             return redirect()->to(site_url('/#login'))
-                ->with('loginNotice', 'Login is unavailable. Check the MySQL connection and try again.')
+                ->with('loginNotice', 'We could not finish recording this login. Check the MySQL connection and database setup, then try again.')
                 ->with('openPanel', 'login');
         }
 
@@ -92,7 +96,7 @@ class Auth extends BaseController
         session()->set('authUser', $user);
 
         return redirect()->to(site_url('/'))
-            ->with('actionNotice', 'Login successful. Welcome back, ' . ($user['firstName'] ?: 'to Sun Son Solar') . '!')
+            ->with('actionNotice', 'Login successful. This login was recorded in the database. Welcome back, ' . ($user['firstName'] ?: 'to Sun Son Solar') . '!')
             ->with('actionNoticeType', 'success');
     }
 

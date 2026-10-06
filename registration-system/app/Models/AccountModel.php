@@ -86,7 +86,30 @@ class AccountModel
             }
         }
 
-        $this->db->table($table)->insert($insert);
+        if ($this->db->table($table)->insert($insert) === false) {
+            throw new RuntimeException('The account could not be saved to the ' . $table . ' table.');
+        }
+    }
+
+    /** Record a successful login without storing any credential data. */
+    public function recordLogin(array $account): void
+    {
+        $role = (string) ($account['role'] ?? '');
+        $this->tableFor($role);
+
+        $accountId = (string) ($account['id'] ?? '');
+        $username = (string) ($account['username'] ?? '');
+        if ($accountId === '' || ! ctype_digit($accountId) || $username === '') {
+            throw new RuntimeException('The authenticated account is missing its database identity.');
+        }
+
+        if ($this->db->table('auth_login_events')->insert([
+            'account_role' => $role,
+            'account_id'   => (int) $accountId,
+            'username'     => $username,
+        ]) === false) {
+            throw new RuntimeException('The successful login could not be recorded in the database.');
+        }
     }
 
     /** Returns a password-free profile, or null when the credentials do not match. */

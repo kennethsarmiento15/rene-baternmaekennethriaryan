@@ -36,6 +36,17 @@ CREATE TABLE IF NOT EXISTS `employees` (
   UNIQUE KEY `uq_employees_username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `auth_login_events` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `account_role` VARCHAR(20) NOT NULL,
+  `account_id` INT UNSIGNED NOT NULL,
+  `username` VARCHAR(50) NOT NULL,
+  `logged_in_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_auth_login_events_account` (`account_role`, `account_id`),
+  KEY `idx_auth_login_events_logged_in_at` (`logged_in_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS `contact_messages` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(150) NOT NULL,
