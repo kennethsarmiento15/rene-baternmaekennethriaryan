@@ -7,6 +7,7 @@ class Home extends BaseController
     public function index(): string
     {
         return view('home', [
+            'navigationGroups'  => config('SiteNavigation')->groups,
             'currentUser'       => session()->get('authUser'),
             'registerNotice'    => session()->getFlashdata('registerNotice'),
             'registerErrors'    => session()->getFlashdata('registerErrors') ?? [],

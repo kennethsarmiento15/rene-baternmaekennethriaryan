@@ -24,7 +24,7 @@ $jsVersion = hash_file('sha256', FCPATH . 'assets/js/app.js') ?: '1';
     <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= base_url('assets/css/app.css?v=' . rawurlencode($cssVersion)) ?>">
 </head>
-<body data-open-panel="<?= esc($openPanel) ?>">
+<body data-open-panel-on-load="<?= esc($openPanel) ?>">
     <a class="skip-link" href="#main-content">Skip to content</a>
 
     <div class="loader-curtain" id="page-loader" aria-hidden="true">
@@ -75,15 +75,15 @@ $jsVersion = hash_file('sha256', FCPATH . 'assets/js/app.js') ?: '1';
             </div>
             <header class="site-header">
                 <nav class="header-nav" aria-label="Main navigation">
-                    <a href="#services">Solar solutions</a>
-                    <a href="#projects">Our approach</a>
+                    <a href="#services">Solutions</a>
+                    <a href="#about-us">Our approach</a>
                 </nav>
                 <a class="brand brand-header" href="#home" aria-label="Sun Son Solar home">
                     <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="6.5"></circle><path d="M16 2.5v4M16 25.5v4M2.5 16h4m19 0h4M6.45 6.45l2.83 2.83m13.44 13.44 2.83 2.83m0-19.1-2.83 2.83M9.28 22.72l-2.83 2.83"></path></svg></span>
                     <span>Sun Son <strong>Solar</strong></span>
                 </a>
                 <div class="header-actions">
-                    <button type="button" class="header-contact" data-open-panel="contact">Contact <span aria-hidden="true">↗</span></button>
+                    <button type="button" class="header-contact" data-open-panel="contact">Get a quote <span aria-hidden="true">↗</span></button>
                     <?php if ($currentUser): ?>
                         <span class="signed-in">Hi, <?= esc($currentUser['firstName'] ?? 'there') ?></span>
                         <form method="post" action="<?= site_url('logout') ?>" class="logout-form">
@@ -93,7 +93,7 @@ $jsVersion = hash_file('sha256', FCPATH . 'assets/js/app.js') ?: '1';
                     <?php else: ?>
                         <button type="button" class="header-login" data-open-panel="login">Log in</button>
                     <?php endif; ?>
-                    <button type="button" class="menu-trigger" aria-label="Open menu" aria-expanded="false" aria-controls="site-menu" data-menu-open>
+                    <button type="button" class="menu-trigger" aria-label="Open navigation menu" aria-expanded="false" aria-controls="site-menu" data-menu-open>
                         <span></span><span></span>
                     </button>
                 </div>
@@ -127,7 +127,7 @@ $jsVersion = hash_file('sha256', FCPATH . 'assets/js/app.js') ?: '1';
             <span class="hero-index" aria-hidden="true">01 — A BRIGHTER START</span>
         </section>
 
-        <section class="trust-section section-card" aria-labelledby="trust-title">
+        <section class="trust-section section-card" id="about-us" aria-labelledby="trust-title">
             <div class="trust-top">
                 <div class="trust-stamp reveal-on-view"><span class="stamp-sun" aria-hidden="true">✳</span><strong>Energy<br>with intent</strong></div>
                 <div class="trust-note reveal-on-view"><span class="index-chip">01</span><div><h2>Designed around real homes</h2><p>Every roof is different. Your solar plan should be, too.</p></div></div>
@@ -161,7 +161,7 @@ $jsVersion = hash_file('sha256', FCPATH . 'assets/js/app.js') ?: '1';
 
         <section class="solutions-section section-card" id="services" aria-labelledby="solutions-title">
             <div class="section-heading reveal-on-view">
-                <p class="eyebrow"><span></span> SOLAR SOLUTIONS</p>
+                <p class="eyebrow"><span></span> SOLAR SOLUTIONSS</p>
                 <h2 id="solutions-title">A clear path to<br><em>cleaner power.</em></h2>
                 <p class="section-lede">From the first conversation to the final switch-on, get practical guidance at each step.</p>
             </div>
@@ -281,15 +281,7 @@ $jsVersion = hash_file('sha256', FCPATH . 'assets/js/app.js') ?: '1';
         </footer>
     </main>
 
-    <div class="menu-overlay" id="site-menu" aria-hidden="true" inert>
-        <button class="menu-shade" type="button" aria-label="Close menu" data-menu-close></button>
-        <div class="menu-panel" role="dialog" aria-modal="true" aria-label="Site menu">
-            <div class="menu-top"><a class="brand brand-menu" href="#home"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="6.5"></circle><path d="M16 2.5v4M16 25.5v4M2.5 16h4m19 0h4M6.45 6.45l2.83 2.83m13.44 13.44 2.83 2.83m0-19.1-2.83 2.83M9.28 22.72l-2.83 2.83"></path></svg></span><span>Sun Son <strong>Solar</strong></span></a><button class="menu-close" type="button" aria-label="Close menu" data-menu-close><span></span><span></span></button></div>
-            <nav class="menu-links" aria-label="Site menu links"><a href="#services" data-menu-link>Solar solutions</a><a href="#projects" data-menu-link>Our approach</a><a href="#questions" data-menu-link>Questions</a><a href="#register" data-menu-link>Create account</a></nav>
-            <div class="menu-bottom"><button type="button" class="pill-button button-light" data-open-panel="contact">Contact our team <span aria-hidden="true">↗</span></button><span>Solar, thoughtfully done.</span></div>
-        </div>
-    </div>
-
+    <?= view('partials/site_navigation', ['navigationGroups' => $navigationGroups ?? []]) ?>
     <div class="modal-backdrop" id="login-modal" aria-hidden="true" inert>
         <button type="button" class="modal-shade" data-close-panel aria-label="Close log in"></button>
         <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="login-title">

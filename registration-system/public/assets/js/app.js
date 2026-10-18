@@ -81,7 +81,9 @@
         menu.classList.remove('is-open');
         menu.setAttribute('aria-hidden', 'true');
         menu.inert = true;
-        document.querySelector('[data-menu-open]')?.setAttribute('aria-expanded', 'false');
+        const menuTrigger = document.querySelector('[data-menu-open]');
+        menuTrigger?.setAttribute('aria-expanded', 'false');
+        menuTrigger?.setAttribute('aria-label', 'Open navigation menu');
         openOverlays.delete('menu');
         syncScrollLock();
         if (restoreFocus) menuReturnFocus?.focus({ preventScroll: true });
@@ -94,7 +96,9 @@
         menu.setAttribute('aria-hidden', 'false');
         menu.classList.add('is-open');
         openOverlays.add('menu');
-        document.querySelector('[data-menu-open]')?.setAttribute('aria-expanded', 'true');
+        const menuTrigger = document.querySelector('[data-menu-open]');
+        menuTrigger?.setAttribute('aria-expanded', 'true');
+        menuTrigger?.setAttribute('aria-label', 'Close navigation menu');
         syncScrollLock();
         focusFirst(menu, '[data-menu-close]:not(.menu-shade)');
     };
@@ -110,7 +114,7 @@
         if (restoreFocus) returnFocus?.focus({ preventScroll: true });
         window.setTimeout(() => {
             const form = panel.querySelector('form');
-            if (form && name === 'contact' && !document.body.dataset.openPanel) form.reset();
+            if (form && name === 'contact' && !document.body.dataset.openPanelOnLoad) form.reset();
         }, 350);
     };
 
@@ -150,7 +154,7 @@
     document.addEventListener('click', (event) => {
         const target = event.target instanceof Element ? event.target : event.target?.parentElement;
         if (!target) return;
-        const opener = target.closest('[data-open-panel]');
+        const opener = target.closest('button[data-open-panel], a[data-open-panel]');
         if (opener) {
             event.preventDefault();
             openPanel(opener.dataset.openPanel, opener);
@@ -508,7 +512,7 @@
     window.setTimeout(beginMinimumDisplay, reducedMotion ? 400 : 2600);
 
     /* Reopen forms after server-side validation or a successful submission. */
-    const requestedPanel = document.body.dataset.openPanel;
+    const requestedPanel = document.body.dataset.openPanelOnLoad;
     const hashPanel = window.location.hash === '#login' ? 'login' : window.location.hash === '#contact' ? 'contact' : '';
     if (requestedPanel || hashPanel) {
         const name = panels[requestedPanel] ? requestedPanel : hashPanel;

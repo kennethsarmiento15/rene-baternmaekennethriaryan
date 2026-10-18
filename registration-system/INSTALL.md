@@ -14,6 +14,12 @@ This folder contains the application files for the CodeIgniter 4 project already
 
 Keep the installed CodeIgniter project's `system`, `writable`, `vendor` (if present), `spark`, and `public/index.php` files. The routes are explicit and the forms use CodeIgniter CSRF protection.
 
+## Site navigation
+
+- `app/Config/SiteNavigation.php` holds the curated navigation groups and their destinations. Update those links when the site sections change.
+- `app/Controllers/Home.php` passes the groups to `app/Views/partials/site_navigation.php`, which renders the responsive menu.
+- `public/assets/css/app.css` contains the menu layout, solar illustration styling, and responsive states. `public/assets/js/app.js` uses the existing accessible menu, focus, escape-key, and quote-modal behavior.
+- The menu is configuration-driven and does not need a database model or SQL import. “Get a quote” opens the existing contact form, which is handled by the `contact` route and `contact_messages` table.
 ## Database behavior
 
 - Customer registrations are saved in `customers`; employee registrations are saved in `employees`.
