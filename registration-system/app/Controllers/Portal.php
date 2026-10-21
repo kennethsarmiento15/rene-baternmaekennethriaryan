@@ -19,7 +19,16 @@ class Portal extends BaseController
         }
 
         try {
-            return view('portal/index', (new PortalModel())->dashboard($user) + [
+            $dashboard = (new PortalModel())->dashboard($user);
+            $requestedMonth = trim((string) $this->request->getGet('month'));
+            $monthDate = \DateTimeImmutable::createFromFormat('!Y-m', $requestedMonth);
+            $dateIssues = \DateTimeImmutable::getLastErrors();
+            if (! $monthDate || $monthDate->format('Y-m') !== $requestedMonth || ($dateIssues && ($dateIssues['warning_count'] > 0 || $dateIssues['error_count'] > 0))) {
+                $monthDate = new \DateTimeImmutable('first day of this month');
+            }
+            $dashboard['calendarMonth'] = $monthDate->format('Y-m');
+
+            return view('portal/index', $dashboard + [
                 'user' => $user,
                 'notice' => session()->getFlashdata('portalNotice'),
                 'noticeType' => session()->getFlashdata('portalNoticeType') ?? 'success',
