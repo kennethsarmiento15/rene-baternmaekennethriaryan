@@ -6,6 +6,7 @@ class Home extends BaseController
 {
     public function index(): string
     {
+        $db = db_connect();
         return view('home', [
             'navigationGroups'  => config('SiteNavigation')->groups,
             'currentUser'       => session()->get('authUser'),
@@ -21,6 +22,8 @@ class Home extends BaseController
             'contactFailed'     => session()->getFlashdata('contactFailed') ?? false,
             'contactData'       => session()->getFlashdata('contactData') ?? [],
             'openPanel'         => session()->getFlashdata('openPanel') ?? '',
+            'publicServices'    => $db->table('service_categories')->where('is_available', 1)->orderBy('id')->get()->getResultArray(),
+            'publicProducts'    => $db->table('products')->where('is_available', 1)->orderBy('category')->orderBy('name')->get()->getResultArray(),
         ]);
     }
 }

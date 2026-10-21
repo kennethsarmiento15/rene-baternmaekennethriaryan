@@ -27,6 +27,8 @@ class AccountModel
         'department'  => ['department', 'departmentname', 'position'],
         'username'    => ['username'],
         'password'    => ['password', 'passwordhash'],
+        'role'        => ['role', 'accountrole'],
+        'active'      => ['isactive', 'active'],
     ];
 
     public function __construct(?BaseConnection $db = null)
@@ -77,6 +79,8 @@ class AccountModel
             'department'  => $account['department'] !== '' ? $account['department'] : null,
             'username'    => $account['username'],
             'password'    => password_hash($account['password'], PASSWORD_DEFAULT),
+            'role'        => $account['accountRole'] ?? $role,
+            'active'      => 1,
         ];
 
         $insert = [];
@@ -130,6 +134,10 @@ class AccountModel
                 continue;
             }
 
+            if (isset($map['active']) && ! (bool) ($row[$map['active']] ?? true)) {
+                continue;
+            }
+
             $stored = (string) ($row[$map['password']] ?? '');
             $info = password_get_info($stored);
             $isHash = ($info['algo'] ?? null) !== null;
@@ -158,7 +166,9 @@ class AccountModel
         };
 
         return [
-            'role'       => $role,
+            'role'       => $role === 'employee' && isset($map['role'])
+                ? (string) ($row[$map['role']] ?: 'employee')
+                : $role,
             'id'         => isset($map['id']) ? (string) ($row[$map['id']] ?? '') : '',
             'firstName'  => $read('first_name'),
             'lastName'   => $read('last_name'),
@@ -166,16 +176,15 @@ class AccountModel
             'email'      => $read('email'),
             'username'   => $read('username'),
             'department' => $read('department'),
+            'active'     => isset($map['active']) ? (bool) ($row[$map['active']] ?? true) : true,
         ];
     }
 
     private function tableFor(string $role): string
     {
-        if (! isset(self::TABLES[$role])) {
-            throw new RuntimeException('Unknown account type.');
-        }
-
-        return self::TABLES[$role];
+        if ($role === 'customer') return 'customers';
+        if (in_array($role, ['employee', 'admin', 'dispatcher', 'technician', 'hr'], true)) return 'employees';
+        throw new RuntimeException('Unknown account type.');
     }
 
     private function columnMap(string $table): array

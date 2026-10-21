@@ -7,7 +7,6 @@ $currentUser = $currentUser ?? null;
 $openPanel = $openPanel ?? '';
 $regValue = static fn (string $key): string => esc((string) ($registrationData[$key] ?? ''));
 $contactValue = static fn (string $key): string => esc((string) ($contactData[$key] ?? ''));
-$selectedRole = (string) ($registrationData['role'] ?? 'customer');
 $cssVersion = hash_file('sha256', FCPATH . 'assets/css/app.css') ?: '1';
 $jsVersion = hash_file('sha256', FCPATH . 'assets/js/app.js') ?: '1';
 ?>
@@ -86,6 +85,7 @@ $jsVersion = hash_file('sha256', FCPATH . 'assets/js/app.js') ?: '1';
                     <button type="button" class="header-contact" data-open-panel="contact">Get a quote <span aria-hidden="true">↗</span></button>
                     <?php if ($currentUser): ?>
                         <span class="signed-in">Hi, <?= esc($currentUser['firstName'] ?? 'there') ?></span>
+                        <a class="header-login" href="<?= site_url('portal') ?>">My workspace</a>
                         <form method="post" action="<?= site_url('logout') ?>" class="logout-form">
                             <?= csrf_field() ?>
                             <button class="header-login" type="submit">Log out</button>
@@ -166,18 +166,24 @@ $jsVersion = hash_file('sha256', FCPATH . 'assets/js/app.js') ?: '1';
                 <p class="section-lede">From the first conversation to the final switch-on, get practical guidance at each step.</p>
             </div>
             <div class="solution-list">
-                <button class="solution-row reveal-on-view" type="button" data-open-panel="contact">
-                    <span class="solution-number">01</span><span class="solution-body"><strong>Home energy assessment</strong><small>Start with your roof, your usage, and the questions that matter to you.</small></span><span class="solution-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
-                </button>
-                <button class="solution-row reveal-on-view" type="button" data-open-panel="contact">
-                    <span class="solution-number">02</span><span class="solution-body"><strong>Solar system design</strong><small>Explore a setup tailored to your property and energy goals.</small></span><span class="solution-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
-                </button>
-                <button class="solution-row reveal-on-view" type="button" data-open-panel="contact">
-                    <span class="solution-number">03</span><span class="solution-body"><strong>Professional installation</strong><small>Know what to expect, with a team to guide the process.</small></span><span class="solution-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
-                </button>
-                <button class="solution-row reveal-on-view" type="button" data-open-panel="contact">
-                    <span class="solution-number">04</span><span class="solution-body"><strong>Ongoing support</strong><small>Get answers and help as you make the most of your solar system.</small></span><span class="solution-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
-                </button>
+                <?php foreach (($publicServices ?? []) as $index => $service): ?>
+                    <a class="solution-row reveal-on-view" href="#register">
+                        <span class="solution-number"><?= esc(str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT)) ?></span><span class="solution-body"><strong><?= esc($service['name']) ?></strong><small><?= esc($service['description']) ?></small></span><span class="solution-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </section>
+
+        <section class="products-section section-card" id="products" aria-labelledby="products-title">
+            <div class="section-heading reveal-on-view">
+                <p class="eyebrow"><span></span> THE SUN SON SOLAR CATALOG</p>
+                <h2 id="products-title">The right pieces<br>for <em>your system.</em></h2>
+                <p class="section-lede">Explore the solar equipment we can plan, supply, and install for your property.</p>
+            </div>
+            <div class="product-grid">
+                <?php foreach (($publicProducts ?? []) as $index => $product): ?>
+                    <article class="product-card reveal-on-view"><span class="product-index"><?= esc(str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT)) ?></span><span class="product-orbit" aria-hidden="true">✳</span><p class="eyebrow"><span></span> <?= esc(strtoupper($product['category'])) ?></p><h3><?= esc($product['name']) ?></h3><p><?= esc($product['description']) ?></p><?php if ($product['price'] !== null): ?><small class="product-price">From ₱<?= esc(number_format((float) $product['price'], 2)) ?></small><?php else: ?><small class="product-price">Planned for your project</small><?php endif; ?><a href="#contact">Ask about this product <span aria-hidden="true">↗</span></a></article>
+                <?php endforeach; ?>
             </div>
         </section>
 
@@ -228,31 +234,25 @@ $jsVersion = hash_file('sha256', FCPATH . 'assets/js/app.js') ?: '1';
                 <div class="account-intro reveal-on-view">
                     <p class="eyebrow"><span></span> YOUR SUN SON SOLAR ACCOUNT</p>
                     <h2>Make yourself<br>at <em>home.</em></h2>
-                    <p>Create a customer account or an employee account to access Sun Son Solar.</p>
-                    <div class="account-points"><span><b>01</b> Choose your account type</span><span><b>02</b> Add your details</span><span><b>03</b> Log in securely</span></div>
+                    <p>Create a customer account to request and manage solar services. Employee accounts are set up by Sun Son Solar administrators.</p>
+                    <div class="account-points"><span><b>01</b> Add your details</span><span><b>02</b> Request a service</span><span><b>03</b> Follow your schedule</span></div>
                 </div>
                 <div class="form-card reveal-on-view">
                     <div class="card-heading"><div><p class="card-kicker">GET STARTED</p><h2 id="register-title">Create your account</h2></div><span class="form-sun" aria-hidden="true">✳</span></div>
-                    <p class="card-description">Choose an account type, then add your details.</p>
+                    <p class="card-description">Your account keeps service requests, messages, and receipts together.</p>
                     <?php if (! empty($registerNotice)): ?><div class="notice <?= ($registerErrors || ($registerFailed ?? false)) ? 'notice-error' : 'notice-success' ?>" role="status"><?= esc($registerNotice) ?></div><?php endif; ?>
                     <form method="post" action="<?= site_url('register') ?>" id="register-form">
                         <?= csrf_field() ?>
-                        <div class="account-type" role="group" aria-label="Account type">
-                            <button type="button" class="type-option <?= $selectedRole === 'customer' ? 'is-selected' : '' ?>" data-role-choice="customer" aria-pressed="<?= $selectedRole === 'customer' ? 'true' : 'false' ?>"><span class="type-icon" aria-hidden="true">⌂</span><span><strong>Customer</strong><small>Solar service account</small></span></button>
-                            <button type="button" class="type-option <?= $selectedRole === 'employee' ? 'is-selected' : '' ?>" data-role-choice="employee" aria-pressed="<?= $selectedRole === 'employee' ? 'true' : 'false' ?>"><span class="type-icon" aria-hidden="true">✦</span><span><strong>Employee</strong><small>Team member account</small></span></button>
-                        </div>
-                        <?php if (isset($registerErrors['role'])): ?><p class="field-error role-error"><?= esc($registerErrors['role']) ?></p><?php endif; ?>
-                        <input type="hidden" name="role" id="account-role" value="<?= esc($selectedRole) ?>">
+                        <input type="hidden" name="role" id="account-role" value="customer">
                         <div class="form-grid">
                             <div class="field"><label for="firstName">First name</label><input id="firstName" name="firstName" type="text" maxlength="100" autocomplete="given-name" placeholder="Juan" value="<?= $regValue('firstName') ?>" required><?php if (isset($registerErrors['firstName'])): ?><small class="field-error"><?= esc($registerErrors['firstName']) ?></small><?php endif; ?></div>
                             <div class="field"><label for="lastName">Last name</label><input id="lastName" name="lastName" type="text" maxlength="100" autocomplete="family-name" placeholder="Dela Cruz" value="<?= $regValue('lastName') ?>" required><?php if (isset($registerErrors['lastName'])): ?><small class="field-error"><?= esc($registerErrors['lastName']) ?></small><?php endif; ?></div>
                             <div class="field"><label for="middleName">Middle name <span class="optional">Optional</span></label><input id="middleName" name="middleName" type="text" maxlength="100" autocomplete="additional-name" value="<?= $regValue('middleName') ?>"><?php if (isset($registerErrors['middleName'])): ?><small class="field-error"><?= esc($registerErrors['middleName']) ?></small><?php endif; ?></div>
-                            <div class="field"><label for="birthdate">Birthdate <span class="optional">Optional</span></label><input id="birthdate" name="birthdate" type="date" max="<?= date('Y-m-d') ?>" value="<?= $regValue('birthdate') ?>"><?php if (isset($registerErrors['birthdate'])): ?><small class="field-error"><?= esc($registerErrors['birthdate']) ?></small><?php endif; ?></div>
+                            <div class="field"><label for="birthdate">Birthdate</label><input id="birthdate" name="birthdate" type="date" max="<?= date('Y-m-d') ?>" value="<?= $regValue('birthdate') ?>" required><?php if (isset($registerErrors['birthdate'])): ?><small class="field-error"><?= esc($registerErrors['birthdate']) ?></small><?php endif; ?></div>
                             <div class="field"><label for="email">Email address</label><input id="email" name="email" type="email" maxlength="150" autocomplete="email" placeholder="you@example.com" value="<?= $regValue('email') ?>" required><?php if (isset($registerErrors['email'])): ?><small class="field-error"><?= esc($registerErrors['email']) ?></small><?php endif; ?></div>
                             <div class="field"><label for="phone">Phone number</label><input id="phone" name="phone" type="tel" maxlength="20" autocomplete="tel" placeholder="0917 123 4567" value="<?= $regValue('phone') ?>" required><?php if (isset($registerErrors['phone'])): ?><small class="field-error"><?= esc($registerErrors['phone']) ?></small><?php endif; ?></div>
-                            <div class="field field-wide"><span class="field-label">Gender <span class="optional">Optional</span></span><div class="choice-row"><?php foreach (['Male', 'Female', 'Prefer not to say'] as $gender): ?><label class="radio-choice"><input type="radio" name="gender" value="<?= esc($gender) ?>" <?= ($registrationData['gender'] ?? '') === $gender ? 'checked' : '' ?>><span><?= esc($gender) ?></span></label><?php endforeach; ?></div><?php if (isset($registerErrors['gender'])): ?><small class="field-error"><?= esc($registerErrors['gender']) ?></small><?php endif; ?></div>
-                            <div class="field field-wide"><label for="address">Address <span class="optional">Optional</span></label><input id="address" name="address" type="text" maxlength="2000" autocomplete="street-address" placeholder="Street, city, province" value="<?= $regValue('address') ?>"><?php if (isset($registerErrors['address'])): ?><small class="field-error"><?= esc($registerErrors['address']) ?></small><?php endif; ?></div>
-                            <div class="field field-wide employee-field" id="department-field" <?= $selectedRole === 'employee' ? '' : 'hidden' ?>><label for="department">Department</label><input id="department" name="department" type="text" maxlength="100" placeholder="e.g. Sales, Installation" value="<?= $regValue('department') ?>" <?= $selectedRole === 'employee' ? 'required' : '' ?>><?php if (isset($registerErrors['department'])): ?><small class="field-error"><?= esc($registerErrors['department']) ?></small><?php endif; ?></div>
+                            <div class="field field-wide"><span class="field-label">Gender</span><div class="choice-row"><?php foreach (['Male', 'Female', 'Prefer not to say'] as $gender): ?><label class="radio-choice"><input type="radio" name="gender" value="<?= esc($gender) ?>" <?= ($registrationData['gender'] ?? '') === $gender ? 'checked' : '' ?> required><span><?= esc($gender) ?></span></label><?php endforeach; ?></div><?php if (isset($registerErrors['gender'])): ?><small class="field-error"><?= esc($registerErrors['gender']) ?></small><?php endif; ?></div>
+                            <div class="field field-wide"><label for="address">Address</label><input id="address" name="address" type="text" maxlength="2000" autocomplete="street-address" placeholder="Street, city, province" value="<?= $regValue('address') ?>" required><?php if (isset($registerErrors['address'])): ?><small class="field-error"><?= esc($registerErrors['address']) ?></small><?php endif; ?></div>
                             <div class="field field-wide"><label for="username">Username</label><input id="username" name="username" type="text" minlength="3" maxlength="50" pattern="[A-Za-z0-9_.\-]{3,50}" autocomplete="username" placeholder="Choose a username" value="<?= $regValue('username') ?>" required><?php if (isset($registerErrors['username'])): ?><small class="field-error"><?= esc($registerErrors['username']) ?></small><?php endif; ?></div>
                             <div class="field"><label for="password">Password</label><input id="password" name="password" type="password" minlength="8" maxlength="72" autocomplete="new-password" placeholder="At least 8 characters" required><?php if (isset($registerErrors['password'])): ?><small class="field-error"><?= esc($registerErrors['password']) ?></small><?php endif; ?></div>
                             <div class="field"><label for="confirmPassword">Confirm password</label><input id="confirmPassword" name="confirmPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" placeholder="Enter it again" required><?php if (isset($registerErrors['confirmPassword'])): ?><small class="field-error"><?= esc($registerErrors['confirmPassword']) ?></small><?php endif; ?></div>
@@ -273,7 +273,7 @@ $jsVersion = hash_file('sha256', FCPATH . 'assets/js/app.js') ?: '1';
         <footer class="site-footer" id="contact">
             <div class="footer-cta"><div><p class="eyebrow eyebrow-light"><span></span> LET'S TALK SOLAR</p><h2>Ready for a<br><em>brighter home?</em></h2></div><button type="button" class="pill-button button-light" data-open-panel="contact">Contact our team <span aria-hidden="true">↗</span></button></div>
             <div class="footer-main">
-                <div class="footer-brand"><a class="brand brand-footer" href="#home"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="6.5"></circle><path d="M16 2.5v4M16 25.5v4M2.5 16h4m19 0h4M6.45 6.45l2.83 2.83m13.44 13.44 2.83 2.83m0-19.1-2.83 2.83M9.28 22.72l-2.83 2.83"></path></svg></span><span>Sun Son <strong>Solar</strong></span></a><p>Thoughtful solar energy solutions for a brighter everyday.</p></div>
+                <div class="footer-brand"><a class="brand brand-footer" href="#home"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="6.5"></circle><path d="M16 2.5v4M16 25.5v4M2.5 16h4m19 0h4M6.45 6.45l2.83 2.83m13.44 13.44 2.83 2.83m0-19.1-2.83 2.83M9.28 22.72l-2.83 2.83"></path></svg></span><span>Sun Son <strong>Solar</strong></span></a><p>Thoughtful solar energy solutions for a brighter everyday.</p><address>Pasig City, Metro Manila<br><a href="tel:+639291230983">0929 123 0983</a></address></div>
                 <nav class="footer-links" aria-label="Explore"><strong>EXPLORE</strong><a href="#services">Solar solutions</a><a href="#projects">Our approach</a><a href="#questions">Common questions</a></nav>
                 <nav class="footer-links" aria-label="Account"><strong>YOUR ACCOUNT</strong><a href="#register">Create an account</a><button type="button" data-open-panel="login">Log in</button><button type="button" data-open-panel="contact">Contact us</button></nav>
             </div>
@@ -281,7 +281,7 @@ $jsVersion = hash_file('sha256', FCPATH . 'assets/js/app.js') ?: '1';
         </footer>
     </main>
 
-    <?= view('partials/site_navigation', ['navigationGroups' => $navigationGroups ?? []]) ?>
+    <?= view('partials/site_navigation', ['navigationGroups' => $navigationGroups ?? [], 'currentUser' => $currentUser]) ?>
     <div class="modal-backdrop" id="login-modal" aria-hidden="true" inert>
         <button type="button" class="modal-shade" data-close-panel aria-label="Close log in"></button>
         <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="login-title">

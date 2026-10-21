@@ -18,8 +18,9 @@ class SiteNavigation extends BaseConfig
         [
             'eyebrow' => '02 / THE SYSTEM',
             'links' => [
-                ['label' => 'Solar panels', 'description' => 'Explore rooftop solar and system design.', 'href' => '#projects'],
-                ['label' => 'Battery storage', 'description' => 'See how storage can complement solar.', 'href' => '#projects'],
+                ['label' => 'Solar panels', 'description' => 'Explore rooftop solar and system design.', 'href' => '#products'],
+                ['label' => 'Battery storage', 'description' => 'See how storage can complement solar.', 'href' => '#products'],
+                ['label' => 'Racking & wiring', 'description' => 'See the components behind a complete solar system.', 'href' => '#products'],
             ],
         ],
         [

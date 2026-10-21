@@ -29,6 +29,11 @@ class Auth extends BaseController
         $safeOldInput = $data;
         unset($safeOldInput['password'], $safeOldInput['confirmPassword']);
 
+        // Staff accounts are provisioned by an authorized administrator only.
+        if ($data['role'] !== 'customer') {
+            $errors['role'] = 'Only customers can create an account here. Ask your administrator for an employee account.';
+        }
+
         if ($errors !== []) {
             return redirect()->to(site_url('/'))
                 ->with('registerNotice', 'Please check the highlighted fields and try again.')
@@ -95,9 +100,9 @@ class Auth extends BaseController
         session()->regenerate(true);
         session()->set('authUser', $user);
 
-        return redirect()->to(site_url('/'))
-            ->with('actionNotice', 'Login successful. This login was recorded in the database. Welcome back, ' . ($user['firstName'] ?: 'to Sun Son Solar') . '!')
-            ->with('actionNoticeType', 'success');
+        return redirect()->to(site_url('portal'))
+            ->with('portalNotice', 'Welcome back, ' . ($user['firstName'] ?: 'to Sun Son Solar') . '.')
+            ->with('portalNoticeType', 'success');
     }
 
     public function logout()
@@ -112,8 +117,8 @@ class Auth extends BaseController
     {
         $errors = [];
 
-        if (! in_array($data['role'], ['customer', 'employee'], true)) {
-            $errors['role'] = 'Choose customer or employee registration.';
+        if ($data['role'] !== 'customer') {
+            $errors['role'] = 'Only customers can register here. Employee accounts are created by an administrator.';
         }
         foreach (['firstName' => 'First name', 'lastName' => 'Last name'] as $field => $label) {
             if ($data[$field] === '') {
@@ -125,7 +130,9 @@ class Auth extends BaseController
         if ($data['middleName'] !== '' && mb_strlen($data['middleName']) > 100) {
             $errors['middleName'] = 'Middle name must be 100 characters or fewer.';
         }
-        if ($data['birthdate'] !== '') {
+        if ($data['birthdate'] === '') {
+            $errors['birthdate'] = 'Birthdate is required.';
+        } else {
             $date = \DateTimeImmutable::createFromFormat('!Y-m-d', $data['birthdate']);
             $dateErrors = \DateTimeImmutable::getLastErrors();
             if (! $date || $date->format('Y-m-d') !== $data['birthdate'] || ($dateErrors && ($dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0))) {
@@ -134,8 +141,8 @@ class Auth extends BaseController
                 $errors['birthdate'] = 'Birthdate cannot be in the future.';
             }
         }
-        if (! in_array($data['gender'], ['', 'Male', 'Female', 'Prefer not to say'], true)) {
-            $errors['gender'] = 'Choose a valid gender option.';
+        if (! in_array($data['gender'], ['Male', 'Female', 'Prefer not to say'], true)) {
+            $errors['gender'] = 'Choose a gender option.';
         }
         if ($data['email'] === '' || ! filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             $errors['email'] = 'Enter a valid email address.';
@@ -145,16 +152,11 @@ class Auth extends BaseController
         if ($data['phone'] === '' || ! preg_match('/^[0-9+()\-\s]{7,20}$/', $data['phone'])) {
             $errors['phone'] = 'Enter a valid phone number.';
         }
-        if (mb_strlen($data['address']) > 2000) {
-            $errors['address'] = 'Address must be 2,000 characters or fewer.';
+        if ($data['address'] === '' || mb_strlen($data['address']) > 2000) {
+            $errors['address'] = 'Enter your address (up to 2,000 characters).';
         }
         if (! preg_match('/^[A-Za-z0-9_.-]{3,50}$/', $data['username'])) {
             $errors['username'] = 'Use 3-50 letters, numbers, dots, dashes, or underscores.';
-        }
-        if ($data['role'] === 'employee' && $data['department'] === '') {
-            $errors['department'] = 'Department is required for employee accounts.';
-        } elseif (mb_strlen($data['department']) > 100) {
-            $errors['department'] = 'Department must be 100 characters or fewer.';
         }
         if (strlen($data['password']) < 8) {
             $errors['password'] = 'Password must be at least 8 characters.';

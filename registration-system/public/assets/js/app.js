@@ -340,43 +340,7 @@
         if (!parallaxFrame) parallaxFrame = requestAnimationFrame(updateParallax);
     }, { passive: true });
 
-    /* Registration input behavior, including employee-only department field. */
-    const roleInput = document.querySelector('#account-role');
-    const departmentField = document.querySelector('#department-field');
-    const departmentInput = document.querySelector('#department');
-    const syncRequiredIndicator = (input) => {
-        const label = input.labels?.[0];
-        if (!label) return;
-        let indicator = label.querySelector('.required-indicator');
-        if (input.required && !indicator) {
-            indicator = document.createElement('span');
-            indicator.className = 'required-indicator';
-            indicator.textContent = 'Required';
-            label.append(indicator);
-        } else if (!input.required) {
-            indicator?.remove();
-        }
-    };
-    document.querySelectorAll('.field input, .field textarea').forEach(syncRequiredIndicator);
-    document.querySelectorAll('[data-role-choice]').forEach((button) => {
-        button.addEventListener('click', () => {
-            const role = button.dataset.roleChoice;
-            document.querySelector('.role-error')?.remove();
-            if (roleInput) roleInput.value = role;
-            document.querySelectorAll('[data-role-choice]').forEach((option) => {
-                const selected = option === button;
-                option.classList.toggle('is-selected', selected);
-                option.setAttribute('aria-pressed', String(selected));
-            });
-            if (departmentField && departmentInput) {
-                const isEmployee = role === 'employee';
-                departmentField.hidden = !isEmployee;
-                departmentInput.required = isEmployee;
-                syncRequiredIndicator(departmentInput);
-                if (!isEmployee) departmentInput.value = '';
-            }
-        });
-    });
+    /* Customer registration and password validation. */
     const registerForm = document.querySelector('#register-form');
     const passwordInput = document.querySelector('#password');
     const confirmInput = document.querySelector('#confirmPassword');

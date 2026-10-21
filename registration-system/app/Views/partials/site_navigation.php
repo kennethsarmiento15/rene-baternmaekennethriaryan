@@ -28,7 +28,11 @@
                             <?php endforeach; ?>
                         </section>
                     <?php endforeach; ?>
-                    <a class="menu-account-link" href="#register" data-menu-link>Customer &amp; team accounts <span aria-hidden="true">&#8599;</span></a>
+                    <?php if (! empty($currentUser)): ?>
+                        <a class="menu-account-link" href="<?= site_url('portal') ?>" data-menu-link>Open my workspace <span aria-hidden="true">&#8599;</span></a>
+                    <?php else: ?>
+                        <a class="menu-account-link" href="#register" data-menu-link>Create a customer account <span aria-hidden="true">&#8599;</span></a>
+                    <?php endif; ?>
                 </nav>
                 <aside class="menu-feature" aria-label="Get a solar quote">
                     <div class="menu-solar-art" aria-hidden="true">
